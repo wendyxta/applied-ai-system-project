@@ -266,7 +266,7 @@ Examples:
 - It does not understand lyrics or language
 - It might over favor one genre or mood
 
-You will go deeper on this in your model card.
+The main limitations and biases are the limited song data and uneven weights. The genre weight is a bit heavier relative to the other signals that it creates a filter bubble. For example, once a user's favorite genre matches any song, that song will almost always rank above a cross-genre song, even if the cross-genre song fits the user's mood and energy far better. This means users whose preferred genre is well-represented in the catalog (like pop or lofi, each with 4 songs) receive a wider, more competitive recommendation pool, while users preferring a rarer genre like ambient (2 songs) get recommendations dominated by the same two songs every time.
 
 ---
 
@@ -281,5 +281,5 @@ Write 1 to 2 paragraphs here about what you learned:
 - about how recommenders turn data into predictions
 - about where bias or unfairness could show up in systems like this
 
-
+I learned how biased a rule based recommender can be without intending to be biased. The biases came from the catalog of songs that are already biased and the recommender learned to recommend songs based on those biases. This made me realize how the song platforms that we use everyday like Spotify learn to be biased and how they recommend songs to us based on predictions from our music profile.
 

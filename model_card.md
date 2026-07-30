@@ -78,7 +78,7 @@ Prompts:
 - Cases where the system overfits to one preference  
 - Ways the scoring might unintentionally favor some users  
 
-The main limitations and biases are the limited song data and uneven weights. The genre weight is a bit heavier relative to the other signals that it creates a filter bubble. For example, once a user's favorite genre matches any song, that song will almost always rank above a cross-genre song, even if the cross-genre song fits the user's mood and energy far better. This means users whose preferred genre is well-represented in the catalog (like pop or lofi, each with 4 songs) receive a wider, more competitive recommendation pool, while users preferring a rarer genre like ambient (2 songs ) get recommendations dominated by the same two songs every time.
+The main limitations and biases are the limited song data and uneven weights. The genre weight is a bit heavier relative to the other signals that it creates a filter bubble. For example, once a user's favorite genre matches any song, that song will almost always rank above a cross-genre song, even if the cross-genre song fits the user's mood and energy far better. This means users whose preferred genre is well-represented in the catalog (like pop or lofi, each with 4 songs) receive a wider, more competitive recommendation pool, while users preferring a rarer genre like ambient (2 songs) get recommendations dominated by the same two songs every time.
 
 ---
 
@@ -124,4 +124,4 @@ Prompts:
 - Something unexpected or interesting you discovered  
 - How this changed the way you think about music recommendation apps  
 
-I learned how biased a rule based recommender can be without intending to be biased. The biases came fromthe catalog of songs that are already biased and the recommender learned to recommend songs based on those biases. This made re realize how the song platforms that we use everyday like Spotify learn to be biased andhow they recommedn songs to us. 
+I learned how biased a rule based recommender can be without intending to be biased. The biases came from the catalog of songs that are already biased and the recommender learned to recommend songs based on those biases. This made me realize how the song platforms that we use everyday like Spotify learn to be biased and how they recommend songs to us based on predictions from our music profile.
