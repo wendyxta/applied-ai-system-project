@@ -7,7 +7,7 @@ flowchart TD
     Human -->|free-text input| PARSE
 
     subgraph PARSE ["Piece 1 — Semantic Profile Parser (profile_parser.py)"]
-        P1[Send description to Gemini API]
+        P1[Send description to Gemini]
         P2[Gemini extracts structured profile\nfavorite_genre, favorite_mood,\ntarget_energy, likes_acoustic]
         P1 --> P2
     end
@@ -16,8 +16,8 @@ flowchart TD
 
     subgraph RETRIEVE ["Piece 2 — Retriever (retrieval.py)"]
         R1[Load local songs.csv\n20 curated songs]
-        R2[Fetch from Last.fm API\n~20 real songs by genre tag]
-        R3[Combine into unified catalog\n~40 songs]
+        R2[Ask Gemini to suggest\n10 real matching songs]
+        R3[Combine into unified catalog\n~30 songs]
         R1 & R2 --> R3
     end
 
@@ -32,7 +32,7 @@ flowchart TD
     S2 -->|top 5 songs + score reasons| EXPLAIN
 
     subgraph EXPLAIN ["Piece 3 — Explainer (recommender.py)"]
-        E1[explain_recommendation\npass each song + original user\ndescription to Gemini API]
+        E1[explain_recommendation_dict\npass each song + user description\nto Gemini]
         E2[Gemini writes one natural-language\nsentence per song explaining the fit]
         E1 --> E2
     end

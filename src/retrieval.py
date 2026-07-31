@@ -1,12 +1,31 @@
 import os
 import json
+import re
 from google import genai
 
 _MODEL = "gemini-3.5-flash-lite"
+_BASE_SONG_ID = 2000
 
 _PROMPT = """Suggest {limit} real songs matching: "{description}"
 Return ONLY a raw JSON array. Each item: title, artist, genre (pop/lofi/rock/jazz/ambient/synthwave/indie pop), mood (happy/chill/intense/relaxed/focused/moody), energy (0.0-1.0), acousticness (0.0-1.0).
 No explanation, no markdown."""
+
+_DEFAULTS = {
+    "title": "Unknown",
+    "artist": "Unknown",
+    "genre": "pop",
+    "mood": "unknown",
+    "energy": 0.5,
+    "acousticness": 0.5,
+}
+
+def _extract_json_from_text(text: str) -> str:
+    """Extract JSON from potentially markdown-wrapped response."""
+    text = text.strip()
+    match = re.search(r"```(?:json)?\s*(.*?)\s*```", text, re.DOTALL)
+    if match:
+        return match.group(1)
+    return text
 
 
 def fetch_songs_from_llm(description: str, limit: int = 10) -> list:
@@ -15,30 +34,27 @@ def fetch_songs_from_llm(description: str, limit: int = 10) -> list:
     prompt = _PROMPT.format(limit=limit, description=description)
     try:
         response = client.models.generate_content(model=_MODEL, contents=prompt)
-        text = response.text.strip()
-        if text.startswith("```"):
-            text = text.split("```")[1]
-            if text.startswith("json"):
-                text = text[4:]
-        tracks = json.loads(text.strip())
-    except Exception as e:
+        json_text = _extract_json_from_text(response.text)
+        tracks = json.loads(json_text)
+    except (json.JSONDecodeError, ValueError) as e:
         print(f"  [retrieval] Song fetch failed: {e}")
         return []
 
-    songs = []
-    for i, t in enumerate(tracks):
-        songs.append({
-            "id":           2000 + i,
-            "title":        t.get("title", "Unknown"),
-            "artist":       t.get("artist", "Unknown"),
-            "genre":        t.get("genre", "pop"),
-            "mood":         t.get("mood", "unknown"),
-            "energy":       float(t.get("energy", 0.5)),
-            "tempo_bpm":    120.0,
-            "valence":      0.5,
+    songs = [
+        {
+            "id": _BASE_SONG_ID + i,
+            "title": t.get("title", _DEFAULTS["title"]),
+            "artist": t.get("artist", _DEFAULTS["artist"]),
+            "genre": t.get("genre", _DEFAULTS["genre"]),
+            "mood": t.get("mood", _DEFAULTS["mood"]),
+            "energy": float(t.get("energy", _DEFAULTS["energy"])),
+            "tempo_bpm": 120.0,
+            "valence": 0.5,
             "danceability": 0.5,
-            "acousticness": float(t.get("acousticness", 0.5)),
-        })
+            "acousticness": float(t.get("acousticness", _DEFAULTS["acousticness"])),
+        }
+        for i, t in enumerate(tracks)
+    ]
 
     print(f"  [retrieval] AI suggested {len(songs)} additional songs.")
     return songs

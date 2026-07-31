@@ -14,7 +14,6 @@ Return ONLY valid JSON with exactly these keys and allowed values:
 }
 No explanation, no markdown — raw JSON only."""
 
-
 def parse_user_description(description: str) -> dict:
     """Send free-text description to Gemini and return a structured profile dict."""
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])

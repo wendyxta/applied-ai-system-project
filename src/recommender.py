@@ -5,6 +5,20 @@ import os
 from google import genai
 
 _MODEL = "gemini-3.5-flash-lite"
+_GEMINI_CLIENT = None
+
+# Scoring weights
+_SCORE_GENRE_MATCH = 2.0
+_SCORE_MOOD_MATCH = 1.5
+_SCORE_ACOUSTIC_MATCH = 0.5
+_ACOUSTIC_THRESHOLD = 0.5
+
+def _get_client():
+    """Get or create a cached Gemini client."""
+    global _GEMINI_CLIENT
+    if _GEMINI_CLIENT is None:
+        _GEMINI_CLIENT = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
+    return _GEMINI_CLIENT
 
 @dataclass
 class Song:
@@ -54,8 +68,7 @@ class Recommender:
             f"(genre: {song.genre}, mood: {song.mood}).\n"
             "Write one sentence (max 20 words) explaining why this song fits."
         )
-        client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
-        response = client.models.generate_content(model=_MODEL, contents=prompt)
+        response = _get_client().models.generate_content(model=_MODEL, contents=prompt)
         return response.text.strip()
 
 
@@ -66,8 +79,7 @@ def explain_recommendation_dict(user_description: str, user_prefs: Dict, song: D
         f"Song: '{song['title']}' by {song['artist']} (genre: {song['genre']}, mood: {song['mood']}).\n"
         "One sentence (max 20 words): why does this song fit?"
     )
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
-    response = client.models.generate_content(model=_MODEL, contents=prompt)
+    response = _get_client().models.generate_content(model=_MODEL, contents=prompt)
     return response.text.strip()
 
 
@@ -99,12 +111,12 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
     reasons = []
 
     if song.get("genre", "").lower() == user_prefs.get("favorite_genre", "").lower():
-        score += 2.0
-        reasons.append("genre match (+2.0)")
+        score += _SCORE_GENRE_MATCH
+        reasons.append(f"genre match (+{_SCORE_GENRE_MATCH})")
 
     if song.get("mood", "").lower() == user_prefs.get("favorite_mood", "").lower():
-        score += 1.5
-        reasons.append("mood match (+1.5)")
+        score += _SCORE_MOOD_MATCH
+        reasons.append(f"mood match (+{_SCORE_MOOD_MATCH})")
 
     target_energy = user_prefs.get("target_energy", 0.5)
     energy_diff = abs(song.get("energy", 0.5) - target_energy)
@@ -113,19 +125,15 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
         score += energy_score
         reasons.append(f"energy proximity (+{energy_score})")
 
-    if user_prefs.get("likes_acoustic", False) and song.get("acousticness", 0.0) > 0.5:
-        score += 0.5
-        reasons.append("acoustic match (+0.5)")
+    if user_prefs.get("likes_acoustic", False) and song.get("acousticness", 0.0) > _ACOUSTIC_THRESHOLD:
+        score += _SCORE_ACOUSTIC_MATCH
+        reasons.append(f"acoustic match (+{_SCORE_ACOUSTIC_MATCH})")
 
     return (round(score, 2), reasons)
 
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """Rank all songs by score and return the top-k results with scores and reasons."""
-    scored = [
-        (song, score, reasons)
-        for song in songs
-        for score, reasons in [score_song(user_prefs, song)]
-    ]
+    scored = [(song, *score_song(user_prefs, song)) for song in songs]
     ranked = sorted(scored, key=lambda item: item[1], reverse=True)
     return [
         (song, score, ", ".join(reasons) if reasons else "no strong matches")

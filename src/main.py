@@ -1,14 +1,3 @@
-"""
-Command line runner for the Music Recommender Simulation (Part 2 — RAG).
-
-Flow:
-  1. User types a free-text description
-  2. Gemini parses it into a structured profile  (profile_parser.py)
-  3. Load local songs.csv + ask Claude for more  (retrieval.py)
-  4. Score and rank the combined catalog          (recommender.py)
-  5. Gemini explains each top result              (recommender.py)
-"""
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -20,7 +9,6 @@ except ModuleNotFoundError:
     from src.profile_parser import parse_user_description
     from src.retrieval import fetch_songs_from_llm
     from src.recommender import load_songs, recommend_songs, explain_recommendation_dict
-
 
 def main() -> None:
     print("\nMusic Recommender — RAG Edition")
@@ -52,7 +40,6 @@ def main() -> None:
         print(f"    Score : {score:.2f}")
         print(f"    Why   : {explanation}")
     print("\n" + "=" * 45)
-
 
 if __name__ == "__main__":
     main()
