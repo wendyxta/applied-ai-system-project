@@ -1,0 +1,52 @@
+---
+title: Music Recommender RAG System Architecture
+---
+flowchart TD
+    Human(["👤 Human User\n(types natural language description)"])
+
+    Human -->|free-text input| PARSE
+
+    subgraph PARSE ["Piece 1 — Semantic Profile Parser (profile_parser.py)"]
+        P1[Send description to Gemini]
+        P2[Gemini extracts structured profile\nfavorite_genre, favorite_mood,\ntarget_energy, likes_acoustic]
+        P1 --> P2
+    end
+
+    P2 -->|structured profile dict| RETRIEVE
+
+    subgraph RETRIEVE ["Piece 2 — Retriever (retrieval.py)"]
+        R1[Load local songs.csv\n20 curated songs]
+        R2[Ask Gemini to suggest\n10 real matching songs]
+        R3[Combine into unified catalog\n~30 songs]
+        R1 & R2 --> R3
+    end
+
+    R3 -->|combined catalog + profile| SCORE
+
+    subgraph SCORE ["Scorer / Ranker (recommender.py)"]
+        S1[score_song\naward points for genre, mood,\nenergy, acousticness match]
+        S2[recommend_songs\nrank all songs, return top 5]
+        S1 --> S2
+    end
+
+    S2 -->|top 5 songs + score reasons| EXPLAIN
+
+    subgraph EXPLAIN ["Piece 3 — Explainer (recommender.py)"]
+        E1[explain_recommendation_dict\npass each song + user description\nto Gemini]
+        E2[Gemini writes one natural-language\nsentence per song explaining the fit]
+        E1 --> E2
+    end
+
+    E2 -->|final recommendations| OUTPUT(["📋 Output\nTop 5 songs ranked by score\nwith AI-generated explanations"])
+
+    OUTPUT -->|human reviews results| Human
+
+    subgraph TEST ["Testing & Reliability (tests/test_recommender.py)"]
+        T1[test_recommend_returns_songs_sorted_by_score\nasserts top result matches genre + mood]
+        T2[test_explain_recommendation_returns_non_empty_string\nasserts explanation is non-empty string]
+        T3["Human Evaluation\n(manual spot-check: do recommendations\nmake sense for the description?)"]
+    end
+
+    SCORE -.->|pytest runs against Scorer| T1
+    EXPLAIN -.->|pytest runs against Explainer| T2
+    OUTPUT -.->|human inspects output| T3
